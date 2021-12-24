@@ -1,8 +1,30 @@
 import UIKit
 
+@dynamicMemberLookup
 public struct ViewRepresentation {
 
-  private var storage: [AnyKeyPath : Any] = [:]
+  struct Box<T> {
+
+
+  }
+
+  private var storage: [AnyKeyPath : Any?] = [:]
+
+  public subscript <T>(dynamicMember keyPath: KeyPath<UIView, T>) -> T? {
+    get {
+      read(for: keyPath)
+    }
+  }
+
+  public subscript <T>(dynamicMember keyPath: KeyPath<UIView, T?>) -> T? {
+    get {
+      read(for: keyPath)
+    }
+  }
+
+  public init() {
+    
+  }
 
   public init(
     from view: UIView
@@ -56,16 +78,35 @@ public struct ViewRepresentation {
     storage[keyPath] = value
   }
 
-  public mutating func write<T>(value: T, for keyPath: KeyPath<UIView, T?>) {
+  public mutating func write<T>(value: T?, for keyPath: KeyPath<UIView, T?>) {
     storage[keyPath] = value
   }
 
   public func read<T>(for keyPath: KeyPath<UIView, T>) -> T? {
-    storage[keyPath] as? T
+    guard let value = storage[keyPath] else {
+      return nil
+    }
+    guard let value = value else {
+      return nil
+    }
+    return value as? T
   }
 
-  public func read<T>(for keyPath: KeyPath<UIView, T?>) -> T?? {
-    storage[keyPath] as? T
+  public func read<T>(for keyPath: KeyPath<UIView, T?>) -> T? {
+    guard let value = storage[keyPath] else {
+      return nil
+    }
+
+    return value as? T
+  }
+
+  public func compare(with view: UIView) {
+
+    for (keyPath, value) in storage {
+      let v = view[keyPath: keyPath]
+
+    }
+
   }
 
 }
