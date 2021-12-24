@@ -1,55 +1,71 @@
 import UIKit
 
-public struct ViewRepresentation: Equatable {
+public struct ViewRepresentation {
 
-  public var center: CGPoint
-  public var bounds: CGRect
-  public var transform: CGAffineTransform
-
-  public var backgroundColor: UIColor?
-  public var alpha: CGFloat
-  public var isHidden: Bool
-
-  public var contentHuggingPriorityForHorizontal: UILayoutPriority
-  public var contentHuggingPriorityForVertical: UILayoutPriority
-
-  public var frame: CGRect {
-    return .init(
-      origin: .init(x: center.x - bounds.width / 2, y: center.y - bounds.height / 2),
-      size: bounds.size
-    )
-  }
+  private var storage: [AnyKeyPath : Any] = [:]
 
   public init(
     from view: UIView
   ) {
 
-    self.center = view.center
-    self.bounds = view.bounds
-    self.transform = view.transform
+    func store<T>(keyPath: KeyPath<UIView, T>) {
+      let value = view[keyPath: keyPath]
+      write(value: value, for: keyPath)
+    }
 
-    self.backgroundColor = view.backgroundColor
-    self.alpha = view.alpha
-    self.isHidden = view.isHidden
+    func store<T>(keyPath: KeyPath<UIView, T?>) {
+      let value = view[keyPath: keyPath]
+      write(value: value, for: keyPath)
+    }
 
-    self.contentHuggingPriorityForHorizontal = view.contentHuggingPriority(for: .horizontal)
-    self.contentHuggingPriorityForVertical = view.contentHuggingPriority(for: .vertical)
+    store(keyPath: \.center)
+    store(keyPath: \.bounds)
+    store(keyPath: \.transform)
+    store(keyPath: \.backgroundColor)
+    store(keyPath: \.alpha)
+    store(keyPath: \.isHidden)
 
   }
 
   public func restore(on view: UIView) {
 
-    view.center = self.center
-    view.bounds = self.bounds
-    view.transform = self.transform
+    func restore<T>(keyPath: ReferenceWritableKeyPath<UIView, T>) {
+      guard let value = read(for: keyPath) else {
+        return
+      }
+      view[keyPath: keyPath] = value
+    }
 
-    view.backgroundColor = self.backgroundColor
-    view.alpha = self.alpha
-    view.isHidden = self.isHidden
+    func restore<T>(keyPath: ReferenceWritableKeyPath<UIView, T?>) {
+      guard let value = read(for: keyPath) else {
+        return
+      }
+      view[keyPath: keyPath] = value
+    }
 
-    view.setContentHuggingPriority(contentHuggingPriorityForHorizontal, for: .horizontal)
-    view.setContentHuggingPriority(contentHuggingPriorityForVertical, for: .vertical)
+    restore(keyPath: \.center)
+    restore(keyPath: \.bounds)
+    restore(keyPath: \.transform)
+    restore(keyPath: \.backgroundColor)
+    restore(keyPath: \.alpha)
+    restore(keyPath: \.isHidden)
 
+  }
+
+  public mutating func write<T>(value: T, for keyPath: KeyPath<UIView, T>) {
+    storage[keyPath] = value
+  }
+
+  public mutating func write<T>(value: T, for keyPath: KeyPath<UIView, T?>) {
+    storage[keyPath] = value
+  }
+
+  public func read<T>(for keyPath: KeyPath<UIView, T>) -> T? {
+    storage[keyPath] as? T
+  }
+
+  public func read<T>(for keyPath: KeyPath<UIView, T?>) -> T?? {
+    storage[keyPath] as? T
   }
 
 }
